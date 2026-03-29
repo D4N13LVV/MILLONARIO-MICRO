@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Quién Quiere Ser Microbiólogo?</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Rajdhani', sans-serif; background: #0a0e1a; color: #fff; min-height: 100vh; }
+.bg { position: fixed; inset: 0; background: radial-gradient(ellipse at top, #0d1f3c 0%, #0a0e1a 65%); z-index: -1; }
+
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; }
+
+/* ── INTRO ── */
+.logo-title { font-family:'Cinzel',serif; font-size:clamp(1.8rem,5vw,3.2rem); color:#f5c842; text-shadow:0 0 40px rgba(245,200,66,.45); line-height:1.2; margin-bottom:6px; text-align:center; }
+.logo-sub { font-size:.95rem; color:#8fb3e8; letter-spacing:3px; text-transform:uppercase; margin-bottom:36px; text-align:center; }
+.case-card { background:rgba(255,255,255,.05); border:1px solid rgba(100,160,255,.3); border-radius:16px; padding:24px 28px; max-width:700px; width:100%; text-align:left; margin-bottom:28px; line-height:1.75; }
+.case-card h3 { font-family:'Cinzel',serif; color:#f5c842; font-size:.9rem; margin-bottom:12px; letter-spacing:1px; }
+.case-card p { font-size:.95rem; color:#c8dcf5; }
+.case-card strong { color:#fff; }
+.btn-gold { background:linear-gradient(135deg,#f5c842,#e8a020); color:#0a0e1a; border:none; font-family:'Cinzel',serif; font-size:1.1rem; font-weight:700; padding:15px 48px; border-radius:50px; cursor:pointer; transition:transform .2s,box-shadow .2s; box-shadow:0 4px 20px rgba(245,200,66,.4); }
+.btn-gold:hover { transform:scale(1.05); box-shadow:0 6px 30px rgba(245,200,66,.6); }
+
+/* ── GAME SCREEN (full presenter layout) ── */
+#screen-game { padding:0; justify-content:flex-start; align-items:stretch; }
+.game-layout { display:flex; width:100%; min-height:100vh; }
+
+/* LEFT: scoreboard sidebar */
+.score-sidebar { width:200px; flex-shrink:0; background:rgba(4,10,28,.97); border-right:1px solid rgba(100,160,255,.12); padding:16px 12px; display:flex; flex-direction:column; gap:10px; }
+.ss-title { font-family:'Cinzel',serif; color:#f5c842; font-size:.75rem; letter-spacing:1px; margin-bottom:4px; }
+.group-score-card { background:rgba(255,255,255,.04); border:1px solid rgba(100,160,255,.15); border-radius:10px; padding:10px 12px; }
+.gsc-name { font-family:'Cinzel',serif; font-size:.78rem; color:#8fb3e8; margin-bottom:6px; }
+.gsc-pts { font-size:1.4rem; font-weight:700; font-family:'Cinzel',serif; color:#f5c842; line-height:1; }
+.gsc-sub { font-size:.7rem; color:#4a6a90; margin-top:2px; }
+.gsc-answers { display:flex; gap:3px; margin-top:6px; flex-wrap:wrap; }
+.ans-dot { width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.08); border:1px solid rgba(100,160,255,.15); font-size:.6rem; display:flex; align-items:center; justify-content:center; color:#4a6a90; }
+.ans-dot.ok { background:rgba(0,200,80,.25); border-color:rgba(0,200,80,.5); color:#7fffb2; }
+.ans-dot.fail { background:rgba(220,60,60,.25); border-color:rgba(220,60,60,.5); color:#ffaaaa; }
+.ans-dot.curr { border-color:#f5c842; color:#f5c842; }
+.ss-bottom { margin-top:auto; display:flex; flex-direction:column; gap:6px; }
+.btn-ss { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:7px 10px; color:#8fb3e8; font-family:'Rajdhani',sans-serif; font-size:.78rem; font-weight:600; cursor:pointer; transition:all .2s; text-align:left; }
+.btn-ss:hover { background:rgba(255,255,255,.1); color:#fff; }
+.btn-ss.danger { border-color:rgba(220,60,60,.25); color:#ff9999; }
+.btn-ss.danger:hover { background:rgba(220,60,60,.12); }
+
+/* CENTER: main question area */
+.main-col { flex:1; display:flex; flex-direction:column; padding:20px 22px; min-width:0; }
+.top-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+.q-label { font-family:'Cinzel',serif; color:#f5c842; font-size:.88rem; }
+.round-tag { background:rgba(100,160,255,.12); border:1px solid rgba(100,160,255,.3); border-radius:20px; padding:4px 14px; font-family:'Cinzel',serif; color:#8fb3e8; font-size:.78rem; }
+
+/* Question progress dots */
+.q-progress { display:flex; gap:5px; margin-bottom:14px; flex-wrap:wrap; }
+.q-dot { width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.07); border:1px solid rgba(100,160,255,.2); font-size:.65rem; font-family:'Cinzel',serif; display:flex; align-items:center; justify-content:center; color:#3a5a80; cursor:default; transition:all .2s; }
+.q-dot.active { background:rgba(245,200,66,.2); border-color:#f5c842; color:#f5c842; }
+.q-dot.done { background:rgba(0,200,80,.15); border-color:rgba(0,200,80,.4); color:#7fffb2; }
+
+.question-box { background:rgba(8,18,48,.85); border:2px solid rgba(100,160,255,.35); border-radius:16px; padding:22px 26px; margin-bottom:16px; }
+.q-topic { font-size:.7rem; color:#4a6a90; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+.question-text { font-size:clamp(.95rem,1.5vw,1.1rem); color:#e0ecff; line-height:1.65; font-weight:600; }
+
+.options-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+@media(max-width:660px){ .options-grid{grid-template-columns:1fr;} }
+.option-btn { background:rgba(255,255,255,.05); border:1.5px solid rgba(100,160,255,.28); border-radius:11px; padding:12px 15px; color:#c8dcf5; font-family:'Rajdhani',sans-serif; font-size:.9rem; font-weight:600; cursor:default; text-align:left; display:flex; align-items:flex-start; gap:9px; line-height:1.4; transition:all .25s; }
+.opt-letter { background:rgba(100,160,255,.18); border-radius:5px; padding:2px 7px; font-family:'Cinzel',serif; color:#8fb3e8; font-size:.74rem; white-space:nowrap; margin-top:2px; flex-shrink:0; }
+.option-btn.correct { background:rgba(0,200,80,.2); border-color:#00c850; color:#7fffb2; }
+.option-btn.correct .opt-letter { background:rgba(0,200,80,.28); color:#7fffb2; }
+.option-btn.hidden-opt { opacity:.13; pointer-events:none; }
+
+/* Lifelines */
+.lifelines { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.ll-btn { background:rgba(255,255,255,.07); border:1px solid rgba(100,160,255,.35); border-radius:9px; padding:7px 13px; color:#8fb3e8; font-family:'Rajdhani',sans-serif; font-size:.82rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.ll-btn:hover:not(:disabled) { background:rgba(100,160,255,.15); color:#fff; }
+.ll-btn:disabled { opacity:.22; cursor:not-allowed; text-decoration:line-through; }
+
+/* RIGHT: per-group answer panel */
+.groups-col { width:270px; flex-shrink:0; background:rgba(4,10,28,.97); border-left:1px solid rgba(100,160,255,.12); padding:16px 14px; display:flex; flex-direction:column; gap:12px; }
+.gc-header { font-family:'Cinzel',serif; color:#f5c842; font-size:.75rem; letter-spacing:1px; margin-bottom:4px; }
+
+.group-answer-panel { background:rgba(255,255,255,.04); border:1px solid rgba(100,160,255,.15); border-radius:12px; padding:12px 14px; }
+.gap-name { font-family:'Cinzel',serif; font-size:.82rem; margin-bottom:8px; }
+.gap-name span { font-size:.65rem; color:#4a6a90; font-family:'Rajdhani',sans-serif; font-weight:400; }
+.answer-btns { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.ans-btn { background:rgba(255,255,255,.06); border:1px solid rgba(100,160,255,.25); border-radius:7px; padding:6px 4px; color:#8fb3e8; font-family:'Cinzel',serif; font-size:.8rem; cursor:pointer; transition:all .2s; text-align:center; }
+.ans-btn:hover:not(:disabled) { background:rgba(100,160,255,.15); color:#fff; }
+.ans-btn:disabled { cursor:default; }
+.ans-btn.chosen { background:rgba(245,200,66,.18); border-color:#f5c842; color:#f5c842; }
+.ans-btn.chosen-correct { background:rgba(0,200,80,.22); border-color:#00c850; color:#7fffb2; }
+.ans-btn.chosen-wrong { background:rgba(220,60,60,.22); border-color:#e04040; color:#ffaaaa; }
+.ans-btn.not-chosen-correct { background:rgba(0,200,80,.1); border-color:rgba(0,200,80,.3); color:rgba(127,255,178,.5); }
+
+/* Reveal + next controls */
+.ctrl-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:auto; padding-top:12px; border-top:1px solid rgba(100,160,255,.1); }
+.btn-reveal { background:rgba(0,200,80,.15); border:1px solid rgba(0,200,80,.4); border-radius:9px; padding:9px 18px; color:#7fffb2; font-family:'Cinzel',serif; font-size:.82rem; cursor:pointer; transition:all .2s; }
+.btn-reveal:hover:not(:disabled) { background:rgba(0,200,80,.25); }
+.btn-reveal:disabled { opacity:.28; cursor:not-allowed; }
+.btn-next { background:linear-gradient(135deg,#4a8fff,#2260cc); border:none; border-radius:9px; padding:9px 22px; color:#fff; font-family:'Cinzel',serif; font-size:.82rem; cursor:pointer; transition:all .2s; }
+.btn-next:hover:not(:disabled) { opacity:.85; }
+.btn-next:disabled { opacity:.28; cursor:not-allowed; }
+.status-msg { font-size:.8rem; color:#6a8ab0; font-style:italic; }
+
+/* Feedback */
+.feedback-box { background:rgba(8,22,55,.92); border:1px solid rgba(100,160,255,.2); border-radius:11px; padding:14px 18px; margin-top:12px; display:none; }
+.feedback-box.show { display:block; }
+.fb-title { font-family:'Cinzel',serif; font-size:.78rem; color:#8fb3e8; margin-bottom:6px; letter-spacing:1px; }
+.feedback-box p { color:#a0bcd8; font-size:.85rem; line-height:1.6; }
+
+/* ── END SCREEN ── */
+.end-wrap { max-width:640px; width:100%; text-align:center; }
+.end-trophy { font-size:4rem; margin-bottom:14px; }
+.end-title { font-family:'Cinzel',serif; font-size:2rem; color:#f5c842; margin-bottom:8px; }
+.end-sub { color:#8fb3e8; font-size:1rem; margin-bottom:28px; }
+.final-podium { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
+.fp-row { background:rgba(255,255,255,.05); border:1px solid rgba(100,160,255,.2); border-radius:13px; padding:14px 20px; display:flex; align-items:center; gap:14px; }
+.fp-row.winner { border-color:#f5c842; background:rgba(245,200,66,.08); }
+.fp-medal { font-size:1.6rem; width:36px; text-align:center; }
+.fp-name { font-family:'Cinzel',serif; font-size:1rem; color:#e0ecff; flex:1; text-align:left; }
+.fp-score { font-family:'Cinzel',serif; color:#f5c842; font-size:1.1rem; }
+.fp-prize { font-size:.78rem; color:#8fb3e8; }
+.btn-restart { background:linear-gradient(135deg,#f5c842,#e8a020); color:#0a0e1a; border:none; font-family:'Cinzel',serif; font-size:1rem; font-weight:700; padding:13px 40px; border-radius:50px; cursor:pointer; transition:transform .2s; box-shadow:0 4px 20px rgba(245,200,66,.4); }
+.btn-restart:hover { transform:scale(1.05); }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:100; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#0d1f3c; border:1.5px solid rgba(100,160,255,.45); border-radius:18px; padding:26px; max-width:460px; width:100%; }
+.modal-box h3 { font-family:'Cinzel',serif; color:#f5c842; margin-bottom:12px; font-size:.95rem; }
+.modal-box p { color:#c8dcf5; line-height:1.7; font-size:.9rem; }
+.bar-label { display:flex; justify-content:space-between; font-size:.78rem; color:#8fb3e8; margin-bottom:3px; margin-top:8px; }
+.bar-track { background:rgba(255,255,255,.08); border-radius:5px; height:20px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:5px; display:flex; align-items:center; padding-left:8px; font-size:.72rem; font-weight:700; color:#fff; transition:width .6s ease; }
+.btn-close-modal { margin-top:16px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:18px; padding:8px 24px; color:#fff; font-family:'Rajdhani',sans-serif; font-size:.88rem; font-weight:600; cursor:pointer; }
+.btn-close-modal:hover { background:rgba(255,255,255,.15); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<!-- ── INTRO ── -->
+<div id="screen-intro" class="screen active">
+  <div class="logo-title">¿Quién Quiere Ser<br>Microbiólogo?</div>
+  <div class="logo-sub">Caso Clínico · Úlcera por Presión</div>
+  <div class="case-card">
+    <h3>📋 Caso Clínico</h3>
+    <p>Paciente adulto mayor con inmovilidad prolongada. Presenta <strong>úlcera por presión</strong> en región sacra con eritema perilesional, exudado purulento y mal olor.<br><br>
+    Se toma <strong>muestra de exudado con hisopo</strong>. El <strong>Gram directo</strong> revela únicamente cocos Gram positivos (2-4 por campo). El cultivo a las 24 h aísla tres microorganismos: <strong><em>E. coli</em></strong>, <strong><em>S. aureus</em></strong> y <strong><em>S. agalactiae</em></strong>.<br><br>
+    <strong>Dinámica:</strong> Los 3 grupos responden cada pregunta al mismo tiempo. Tú registras la respuesta de cada grupo y decides cuándo revelar. ¡El grupo con más aciertos gana!</p>
+  </div>
+  <button class="btn-gold" onclick="showScreen('screen-game'); initGame()">Comenzar presentación →</button>
+</div>
+
+<!-- ── GAME ── -->
+<div id="screen-game" class="screen">
+  <div class="game-layout">
+
+    <!-- LEFT: scoreboard -->
+    <div class="score-sidebar">
+      <div class="ss-title">Marcador</div>
+      <div id="score-g0" class="group-score-card"></div>
+      <div id="score-g1" class="group-score-card"></div>
+      <div id="score-g2" class="group-score-card"></div>
+      <div class="ss-bottom">
+        <button class="btn-ss" onclick="showScreen('screen-end'); buildFinal()">🏆 Ver final</button>
+        <button class="btn-ss danger" onclick="confirmRestart()">✕ Reiniciar</button>
+      </div>
+    </div>
+
+    <!-- CENTER: question -->
+    <div class="main-col">
+      <div class="top-bar">
+        <div class="q-label" id="q-label">Pregunta 1 / 12</div>
+        <div class="round-tag" id="round-tag">Ronda 1 · Grupo 1</div>
+      </div>
+
+      <div class="q-progress" id="q-progress"></div>
+
+      <div class="question-box">
+        <div class="q-topic" id="q-topic"></div>
+        <div class="question-text" id="question-text">—</div>
+      </div>
+
+      <div class="options-grid" id="options-grid"></div>
+
+      <div class="lifelines">
+        <button class="ll-btn" id="ll-5050" onclick="use5050()">½ 50:50</button>
+        <button class="ll-btn" id="ll-phone" onclick="usePhone()">📞 Experto</button>
+        <button class="ll-btn" id="ll-audience" onclick="useAudience()">👥 Público</button>
+      </div>
+
+      <div class="ctrl-bar">
+        <button class="btn-reveal" id="btn-reveal" onclick="revealAnswer()" disabled>✓ Revelar respuesta</button>
+        <button class="btn-next"   id="btn-next"   onclick="nextQuestion()"  disabled>Siguiente →</button>
+        <span class="status-msg" id="status-msg">Registra las respuestas de los grupos →</span>
+      </div>
+
+      <div class="feedback-box" id="feedback-box">
+        <div class="fb-title">💡 Explicación</div>
+        <p id="feedback-text"></p>
+      </div>
+    </div>
+
+    <!-- RIGHT: per-group answer input -->
+    <div class="groups-col">
+      <div class="gc-header">Respuestas de los grupos</div>
+
+      <div class="group-answer-panel" id="gap-0">
+        <div class="gap-name">🔬 Grupo 1 <span id="g0-status"></span></div>
+        <div class="answer-btns" id="ab-0"></div>
+      </div>
+      <div class="group-answer-panel" id="gap-1">
+        <div class="gap-name">🧫 Grupo 2 <span id="g1-status"></span></div>
+        <div class="answer-btns" id="ab-1"></div>
+      </div>
+      <div class="group-answer-panel" id="gap-2">
+        <div class="gap-name">🧪 Grupo 3 <span id="g2-status"></span></div>
+        <div class="answer-btns" id="ab-2"></div>
+      </div>
+
+      <div style="margin-top:auto; padding-top:12px; border-top:1px solid rgba(100,160,255,.1); font-size:.72rem; color:#3a5a70; line-height:1.5;">
+        Selecciona la respuesta de cada grupo, luego presiona <strong style="color:#8fb3e8;">Revelar</strong>.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── END ── -->
+<div id="screen-end" class="screen">
+  <div class="end-wrap">
+    <div class="end-trophy">🏆</div>
+    <div class="end-title">¡Fin del juego!</div>
+    <div class="end-sub" id="end-sub">Resultados finales</div>
+    <div class="final-podium" id="final-podium"></div>
+    <button class="btn-restart" onclick="confirmRestart()">Jugar de nuevo</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title"></h3>
+    <div id="modal-content"></div>
+    <button class="btn-close-modal" onclick="closeModal()">Entendido</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+const GROUPS = [
+  { name:'Grupo 1', icon:'🔬' },
+  { name:'Grupo 2', icon:'🧫' },
+  { name:'Grupo 3', icon:'🧪' }
+];
+
+// 12 questions: 4 per group, interleaved G1-Q1, G2-Q1, G3-Q1, G1-Q2 ...
+// Each question tagged with which group it "belongs to" (for topic label)
+const QUESTIONS = [
+  // ── RONDA 1 ──
+  { group:0, topic:'Grupo 1 · Fase Preanalítica',
+    q:'El Gram directo del exudado solo mostró cocos Gram positivos (2-4 por campo), pero el cultivo también aisló E. coli. ¿Cuál es la explicación más correcta?',
+    opts:['E. coli cambia su morfología al Gram según las condiciones','El límite de detección del Gram (~10⁴–10⁵ UFC/mL) no alcanzó para E. coli; el cultivo actuó como amplificador biológico','El hisopo tomó muestra incorrecta y se contaminó en transporte','E. coli no crece en agar sangre y por eso no se vio al Gram'],
+    correct:1, explanation:'El Gram tiene un límite de detección de 10⁴–10⁵ UFC/mL. En la biopelícula de una úlcera crónica, E. coli suele residir en capas más profundas con menor carga superficial. El cultivo actúa como amplificador biológico: pocas bacterias viables generan colonias visibles en 24 horas.' },
+
+  { group:1, topic:'Grupo 2 · Identificación Fenotípica',
+    q:'La prueba de catalasa (H₂O₂) es el primer gran divisor al identificar cocos Gram positivos. Si el resultado es POSITIVO con burbujas visibles, ¿hacia qué familia se orienta el diagnóstico?',
+    opts:['Streptococcaceae (S. pyogenes, S. agalactiae)','Enterococcaceae (E. faecalis, E. faecium)','Staphylococcaceae (S. aureus, S. epidermidis)','Micrococcaceae exclusivamente'],
+    correct:2, explanation:'La catalasa desdobla el H₂O₂ en agua y oxígeno (burbujas visibles). Catalasa positiva → Staphylococcaceae. Catalasa negativa → Streptococcaceae o Enterococcaceae. Es la prueba divisora de aguas más importante en el triage fenotípico de cocos Gram positivos.' },
+
+  { group:2, topic:'Grupo 3 · Antibiogramas',
+    q:'¿Por qué se usó el disco de CEFOXITINA (FOX) en el antibiograma de S. aureus si no se usa clínicamente para tratar al paciente?',
+    opts:['Para confirmar sensibilidad a cefalosporinas de primera generación','Es el mejor marcador fenotípico del gen mecA; halo pequeño indica MRSA, resistente a TODOS los betalactámicos','Se incluye en todo antibiograma como relleno sin función definida','La cefoxitina es sinérgica con vancomicina en tejidos blandos'],
+    correct:1, explanation:'La cefoxitina es el mejor inductor y marcador fenotípico del gen mecA. Si mecA está presente, la bacteria produce PBP2a, confiriendo resistencia a todos los betalactámicos: MRSA. En este caso el halo fue 22 mm, confirmando MSSA. El resultado define toda la elección antibiótica.' },
+
+  // ── RONDA 2 ──
+  { group:0, topic:'Grupo 1 · Medios de cultivo',
+    q:'¿Cuál es la función PRINCIPAL del Agar MacConkey (MKL) en la batería de siembra primaria?',
+    opts:['Recuperar anaerobios estrictos del exudado profundo','Detectar patrones de hemólisis en cocos Gram positivos','Seleccionar bacilos Gram negativos e identificarlos por fermentación de lactosa, inhibiendo los Gram positivos','Enriquecer bacterias fastidiosas que no crecen en medios estándar'],
+    correct:2, explanation:'El MacConkey contiene sales biliares y cristal violeta que inhiben los Gram positivos (selectivo), y usa lactosa + rojo neutro como diferencial: E. coli fermenta la lactosa, produce ácido y las colonias se tornan rosadas/fucsia. Es el filtro clásico para enterobacterias.' },
+
+  { group:1, topic:'Grupo 2 · Identificación Fenotípica',
+    q:'La prueba de coagulasa (Staptest B) dio resultado POSITIVO para la colonia mediana y blanca. ¿Qué confirma y por qué?',
+    opts:['S. epidermidis: el estafilococo más abundante en piel','S. aureus: la coagulasa detecta el clumping factor y la Proteína A, exclusivos de esta especie','Descarta Staphylococcus y orienta hacia Micrococcus','Streptococcus porque la coagulasa es positiva en toda bacteria encapsulada'],
+    correct:1, explanation:'La coagulasa detecta el clumping factor (coagulasa ligada) y la Proteína A, estructuras superficiales exclusivas de S. aureus. Catalasa positiva + coagulasa positiva confirma S. aureus prácticamente sin necesidad de pruebas adicionales.' },
+
+  { group:2, topic:'Grupo 3 · Antibiogramas',
+    q:'Se observa resistencia a eritromicina pero sensibilidad aparente a clindamicina en S. aureus. El D-Test resultó POSITIVO. ¿Cuál es la interpretación clínica correcta?',
+    opts:['La clindamicina puede usarse; tiene mecanismo diferente a la eritromicina','La eritromicina indujo el gen erm que también confiere resistencia a clindamicina; esta NO debe usarse clínicamente','Indica fenotipo M por eflujo; la clindamicina es segura porque actúa en sitio diferente','El D-Test positivo indica multirresistencia; solo puede usarse linezolid'],
+    correct:1, explanation:'El gen erm confiere resistencia a macrólidos Y lincosamidas, pero solo se activa en presencia de eritromicina. Si el halo de clindamicina se aplana en D, la eritromicina indujo la resistencia. Usar clindamicina in vivo podría inducir el gen erm durante el tratamiento, causando fracaso terapéutico.' },
+
+  // ── RONDA 3 ──
+  { group:0, topic:'Grupo 1 · Medios de cultivo',
+    q:'En el Agar Sal Manitol (MAN), el medio virará a AMARILLO alrededor de una colonia. ¿Qué indica este hallazgo?',
+    opts:['Streptococcus beta hemolítico que fermenta la glucosa','S. aureus fermenta el manitol bajando el pH, haciendo virar el rojo fenol a amarillo','E. coli produce gas a partir del manitol en condiciones anaerobias','El agar está caducado; es un artefacto técnico'],
+    correct:1, explanation:'El Agar Sal Manitol tiene NaCl al 7.5% que inhibe casi todo excepto Staphylococcus. S. aureus fermenta el manitol, acidifica el medio y el rojo fenol vira a amarillo. Es el marcador fenotípico clásico que diferencia S. aureus de los estafilococos coagulasa negativos.' },
+
+  { group:1, topic:'Grupo 2 · Identificación Fenotípica',
+    q:'La colonia pequeña y beta hemolítica dio catalasa NEGATIVA y aglutinó con el reactivo B del Streptest de Lancefield. ¿Qué confirma?',
+    opts:['Streptococcus pyogenes Grupo A: principal causante de faringitis estreptocócica','Enterococcus faecalis: contaminante habitual del tracto gastrointestinal','Streptococcus agalactiae Grupo B: patógeno oportunista en adultos inmunocomprometidos','Streptococcus pneumoniae: agente de neumonía que puede infectar úlceras'],
+    correct:2, explanation:'La aglutinación de Lancefield usa anticuerpos contra el carbohidrato C de la pared celular. Grupo B = S. agalactiae. En adultos mayores debilitados es un patógeno oportunista real en infecciones de piel y tejidos blandos, incluidas las úlceras por presión.' },
+
+  { group:2, topic:'Grupo 3 · Antibiogramas',
+    q:'¿Por qué se usa el panel "No Uro" para E. coli aislada de la úlcera, y no el panel urinario habitual?',
+    opts:['En tejido sistémico los antibióticos no se concentran como en orina; los puntos de corte de MIC son más estrictos y una bacteria "Sensible en orina" puede ser "Resistente en tejido"','El panel Uro solo evalúa nitrofurantoína y fosfomicina, inapropiadas para tejidos blandos','No hay diferencia real; es solo una convención del laboratorio','E. coli de úlceras siempre produce BLEE y requiere panel de carbapenémicos'],
+    correct:0, explanation:'Los puntos de corte de MIC cambian según el sitio de infección. En orina, los antibióticos se concentran hasta 100× el nivel sérico, haciendo el umbral "Sensible" más laxo. En tejido sistémico, el fármaco llega a menor concentración, exigiendo puntos de corte más estrictos (CLSI/EUCAST).' },
+
+  // ── RONDA 4 ──
+  { group:0, topic:'Grupo 1 · Medios de cultivo',
+    q:'¿Cuál es la función del Caldo Tioglicolato (TIO) en la batería de siembra primaria?',
+    opts:['Seleccionar exclusivamente anaerobios estrictos inhibiendo aerobias','Proporcionar factores X y V para bacterias fastidiosas como Haemophilus','Actuar como medio de rescate y enriquecimiento: crea un gradiente de O₂ que recupera bacterias en baja concentración, incluidos anaerobios facultativos','Inhibir Gram positivos para purificar el aislamiento de E. coli antes del API 20E'],
+    correct:2, explanation:'El tioglicolato de sodio consume oxígeno y crea un gradiente: aeróbico en superficie, microaerofílico al centro y anaeróbico en el fondo. Permite recuperar bacterias en muy baja concentración y evitar la muerte de anaerobios que no sobrevivirían expuestos al oxígeno en las placas de agar.' },
+
+  { group:1, topic:'Grupo 2 · Identificación Fenotípica',
+    q:'¿Por qué se usó el sistema API 20E para identificar la colonia grande y gris (Gram negativo), en lugar de una prueba única?',
+    opts:['Es el único método que diferencia Gram negativos de Gram positivos microscópicamente','El API 20E evalúa 20 rutas metabólicas simultáneas generando un código numérico con 99.5% de certeza a nivel de especie','La morfología en MacConkey fue suficiente; el API solo confirma el antibiograma','El API 20E se usa solo para hongos; para bacterias se usa el API 20NE'],
+    correct:1, explanation:'El API 20E evalúa fermentación de azúcares, descarboxilación de aminoácidos, producción de indol y otras 20 rutas metabólicas. La combinación genera un código numérico único que se contrasta en una base de datos para identificar la especie con 99.5% de certeza. Es el estándar de oro para enterobacterias.' },
+
+  { group:2, topic:'Grupo 3 · Terapéutica',
+    q:'Considerando el perfil completo (E. coli sin BLEE, S. aureus MSSA con D-Test positivo, S. agalactiae sensible a penicilina), ¿cuál es la estrategia antibiótica más racional?',
+    opts:['Vancomicina + Meropenem para cubrir cualquier resistencia oculta','Clindamicina + Ciprofloxacino: excelente penetración en tejidos blandos','Amoxicilina-clavulánico o cefalosporina de 3G cubren los tres gérmenes; evitar clindamicina por D-Test positivo','Solo desbridamiento local; las úlceras infectadas no requieren antibióticos sistémicos'],
+    correct:2, explanation:'Razonamiento: (1) S. aureus MSSA → betalactámicos funcionan; (2) D-Test positivo → clindamicina contraindicada; (3) E. coli sin BLEE → cefalosporinas 3G o amoxicilina-clavulánico eficaces; (4) S. agalactiae universalmente sensible a penicilina. Un betalactámico de amplio espectro ofrece cobertura racional sin escalar a carbapenémicos.' }
+];
+
+const PRIZES = ['$ 100','$ 500','$ 1,000','$ 2,000','$ 5,000','$ 8,000','$ 10,000','$ 12,000','$ 16,000','$ 20,000','$ 25,000','$ 32,000'];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let qIndex = 0;        // 0..11
+let revealed = false;
+let groupAnswers = [-1,-1,-1]; // chosen option per group for current question
+let scores = [0,0,0];  // correct answers per group
+let history = [];      // {g0:bool, g1:bool, g2:bool} per question
+let ll5050Used=false, llPhoneUsed=false, llAudienceUsed=false;
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+function initGame(){
+  qIndex=0; revealed=false; groupAnswers=[-1,-1,-1];
+  scores=[0,0,0]; history=[];
+  ll5050Used=false; llPhoneUsed=false; llAudienceUsed=false;
+  buildProgress();
+  loadQuestion();
+  updateScoreSidebar();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS DOTS
+═══════════════════════════════════════════ */
+function buildProgress(){
+  const el=document.getElementById('q-progress'); el.innerHTML='';
+  for(let i=0;i<12;i++){
+    const d=document.createElement('div');
+    d.className='q-dot'; d.id='qd-'+i; d.textContent=i+1;
+    el.appendChild(d);
+  }
+}
+function updateProgress(){
+  for(let i=0;i<12;i++){
+    const d=document.getElementById('qd-'+i);
+    d.className='q-dot'+(i<qIndex?' done':(i===qIndex?' active':''));
+  }
+}
+
+/* ═══════════════════════════════════════════
+   LOAD QUESTION
+═══════════════════════════════════════════ */
+function loadQuestion(){
+  revealed=false; groupAnswers=[-1,-1,-1];
+  const q=QUESTIONS[qIndex];
+  const ronda=Math.floor(qIndex/3)+1;
+  const gIdx=qIndex%3;
+
+  document.getElementById('q-label').textContent=`Pregunta ${qIndex+1} / 12`;
+  document.getElementById('round-tag').textContent=`Ronda ${ronda} · ${GROUPS[gIdx].icon} ${GROUPS[gIdx].name}`;
+  document.getElementById('q-topic').textContent=q.topic;
+  document.getElementById('question-text').textContent=q.q;
+
+  // options
+  const grid=document.getElementById('options-grid'); grid.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('div');
+    btn.className='option-btn'; btn.id='opt-'+i;
+    btn.innerHTML=`<span class="opt-letter">${l}</span><span>${q.opts[i]}</span>`;
+    grid.appendChild(btn);
+  });
+
+  // group answer buttons
+  [0,1,2].forEach(g=>{
+    const ab=document.getElementById('ab-'+g); ab.innerHTML='';
+    ['A','B','C','D'].forEach((l,i)=>{
+      const btn=document.createElement('button');
+      btn.className='ans-btn'; btn.id=`ab${g}-${i}`;
+      btn.textContent=l;
+      btn.onclick=()=>setGroupAnswer(g,i);
+      ab.appendChild(btn);
+    });
+    document.getElementById('g'+g+'-status').textContent='';
+  });
+
+  document.getElementById('btn-reveal').disabled=true;
+  document.getElementById('btn-next').disabled=true;
+  document.getElementById('status-msg').textContent='Registra las respuestas de los grupos →';
+  document.getElementById('feedback-box').className='feedback-box';
+  document.getElementById('feedback-box').style.display='none';
+
+  document.getElementById('ll-5050').disabled=ll5050Used;
+  document.getElementById('ll-phone').disabled=llPhoneUsed;
+  document.getElementById('ll-audience').disabled=llAudienceUsed;
+
+  updateProgress();
+}
+
+/* ═══════════════════════════════════════════
+   GROUP ANSWER SELECTION
+═══════════════════════════════════════════ */
+function setGroupAnswer(g, optIdx){
+  if(revealed) return;
+  groupAnswers[g]=optIdx;
+  // update buttons
+  ['A','B','C','D'].forEach((_,i)=>{
+    const btn=document.getElementById(`ab${g}-${i}`);
+    btn.className='ans-btn'+(i===optIdx?' chosen':'');
+  });
+  // highlight option on main display (show which options are being picked overall)
+  updateMainHighlight();
+  // check if at least one group answered
+  const anyAnswered=groupAnswers.some(a=>a>=0);
+  document.getElementById('btn-reveal').disabled=!anyAnswered;
+  // update status
+  const answered=groupAnswers.filter(a=>a>=0).length;
+  document.getElementById('status-msg').textContent=`${answered}/3 grupo${answered!==1?'s':''} registrado${answered!==1?'s':''}`;
+}
+
+function updateMainHighlight(){
+  // tally how many groups chose each option
+  ['A','B','C','D'].forEach((_,i)=>{
+    const btn=document.getElementById('opt-'+i);
+    if(!btn) return;
+    const count=groupAnswers.filter(a=>a===i).length;
+    // show a subtle border if any group chose it
+    if(count>0 && !revealed){
+      btn.style.borderColor='rgba(245,200,66,.5)';
+      btn.style.background='rgba(245,200,66,.07)';
+    } else if(!revealed){
+      btn.style.borderColor='';
+      btn.style.background='';
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════
+   REVEAL
+═══════════════════════════════════════════ */
+function revealAnswer(){
+  if(revealed) return;
+  revealed=true;
+  const q=QUESTIONS[qIndex];
+  const roundHistory={g0:false,g1:false,g2:false};
+
+  // reveal correct option on main display
+  document.querySelectorAll('.option-btn').forEach((b,i)=>{
+    b.style.borderColor=''; b.style.background='';
+    if(i===q.correct) b.classList.add('correct');
+  });
+
+  // update per-group buttons and score
+  [0,1,2].forEach(g=>{
+    const chosen=groupAnswers[g];
+    const ok=chosen===q.correct;
+    if(chosen>=0){
+      ['A','B','C','D'].forEach((_,i)=>{
+        const btn=document.getElementById(`ab${g}-${i}`);
+        if(i===chosen && ok) btn.className='ans-btn chosen-correct';
+        else if(i===chosen && !ok) btn.className='ans-btn chosen-wrong';
+        else if(i===q.correct) btn.className='ans-btn not-chosen-correct';
+        else btn.className='ans-btn';
+        btn.disabled=true;
+      });
+      if(ok) scores[g]++;
+      roundHistory['g'+g]=ok;
+    } else {
+      // group didn't answer: just show correct
+      ['A','B','C','D'].forEach((_,i)=>{
+        const btn=document.getElementById(`ab${g}-${i}`);
+        if(i===q.correct) btn.className='ans-btn not-chosen-correct';
+        btn.disabled=true;
+      });
+    }
+    const statusEl=document.getElementById('g'+g+'-status');
+    statusEl.textContent=chosen>=0?(ok?' ✓':' ✗'):' —';
+    statusEl.style.color=chosen>=0?(ok?'#7fffb2':'#ffaaaa'):'#4a6a90';
+  });
+
+  history.push(roundHistory);
+  updateScoreSidebar();
+
+  // feedback
+  const fb=document.getElementById('feedback-box');
+  fb.style.display='block'; fb.className='feedback-box show';
+  document.getElementById('feedback-text').textContent=q.explanation;
+
+  document.getElementById('btn-reveal').disabled=true;
+  document.getElementById('btn-next').disabled=false;
+  document.getElementById('status-msg').textContent='';
+}
+
+/* ═══════════════════════════════════════════
+   NEXT
+═══════════════════════════════════════════ */
+function nextQuestion(){
+  if(qIndex>=11){ showScreen('screen-end'); buildFinal(); return; }
+  qIndex++;
+  ll5050Used=false; llPhoneUsed=false; llAudienceUsed=false;
+  loadQuestion();
+}
+
+/* ═══════════════════════════════════════════
+   SCORE SIDEBAR
+═══════════════════════════════════════════ */
+function updateScoreSidebar(){
+  [0,1,2].forEach(g=>{
+    const el=document.getElementById('score-g'+g);
+    const dots=Array.from({length:12},(_,i)=>{
+      if(i>=history.length) return `<div class="ans-dot${i===qIndex&&revealed?'':i===qIndex?' curr':''}">${i+1}</div>`;
+      const ok=history[i]['g'+g];
+      return `<div class="ans-dot ${ok?'ok':'fail'}">${ok?'✓':'✗'}</div>`;
+    }).join('');
+    el.innerHTML=`
+      <div class="gsc-name">${GROUPS[g].icon} ${GROUPS[g].name}</div>
+      <div class="gsc-pts">${scores[g]}<span style="font-size:.85rem;color:#4a6a90;font-family:'Rajdhani',sans-serif;font-weight:400;">/12</span></div>
+      <div class="gsc-sub">${scores[g]>0?PRIZES[scores[g]-1]:'$ 0'}</div>
+      <div class="gsc-answers">${dots}</div>`;
+  });
+}
+
+/* ═══════════════════════════════════════════
+   FINAL PODIUM
+═══════════════════════════════════════════ */
+function buildFinal(){
+  const sorted=[0,1,2].map(i=>({g:i,score:scores[i]})).sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  const winner=sorted[0];
+  let sub='';
+  if(sorted[0].score===sorted[1].score) sub='¡Empate en primer lugar! 🤝';
+  else sub=`¡${GROUPS[winner.g].name} gana con ${winner.score} respuestas correctas!`;
+  document.getElementById('end-sub').textContent=sub;
+  let html='';
+  sorted.forEach((s,rank)=>{
+    html+=`<div class="fp-row ${rank===0?'winner':''}">
+      <div class="fp-medal">${medals[rank]}</div>
+      <div class="fp-name">${GROUPS[s.g].icon} ${GROUPS[s.g].name}</div>
+      <div>
+        <div class="fp-score">${s.score}/12</div>
+        <div class="fp-prize">${s.score>0?PRIZES[s.score-1]:'$ 0'}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('final-podium').innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════
+   LIFELINES
+═══════════════════════════════════════════ */
+function use5050(){
+  if(ll5050Used||revealed) return;
+  ll5050Used=true; document.getElementById('ll-5050').disabled=true;
+  const correct=QUESTIONS[qIndex].correct;
+  const wrong=[0,1,2,3].filter(i=>i!==correct).sort(()=>Math.random()-.5).slice(0,2);
+  wrong.forEach(i=>{
+    document.getElementById('opt-'+i).classList.add('hidden-opt');
+    [0,1,2].forEach(g=>document.getElementById(`ab${g}-${i}`).disabled=true);
+  });
+}
+function usePhone(){
+  if(llPhoneUsed||revealed) return;
+  llPhoneUsed=true; document.getElementById('ll-phone').disabled=true;
+  const l=['A','B','C','D'][QUESTIONS[qIndex].correct];
+  const conf=Math.floor(Math.random()*15)+82;
+  showModal('📞 Llamada al Experto',
+    `<p style="margin-bottom:12px;">El Dr. Ramírez, especialista en Microbiología Clínica, responde:</p>
+    <p style="background:rgba(255,255,255,.05);border-radius:8px;padding:14px;font-style:italic;color:#e0ecff;">
+    "Sin dudarlo, la respuesta es la opción <strong style="color:#f5c842">${l}</strong>. Lo afirmo con un ${conf}% de seguridad."</p>`);
+}
+function useAudience(){
+  if(llAudienceUsed||revealed) return;
+  llAudienceUsed=true; document.getElementById('ll-audience').disabled=true;
+  const correct=QUESTIONS[qIndex].correct;
+  let vals=[0,0,0,0];
+  const main=Math.floor(Math.random()*20)+55; vals[correct]=main;
+  let rem=100-main;
+  const others=[0,1,2,3].filter(i=>i!==correct);
+  others.forEach((i,idx)=>{ if(idx<2){const v=Math.floor(Math.random()*rem*.55);vals[i]=v;rem-=v;}else vals[i]=rem; });
+  const colors=['#4a8fff','#f5c842','#7fffb2','#ff7eb6'];
+  let bars='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    bars+=`<div class="bar-label"><span>Opción ${l}</span><span>${vals[i]}%</span></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${vals[i]}%;background:${colors[i]}">${vals[i]>15?vals[i]+'%':''}</div></div>`;
+  });
+  showModal('👥 Ayuda del Público',`<p style="margin-bottom:12px;color:#8fb3e8;">Votación del público:</p>${bars}`);
+}
+
+function showModal(t,c){ document.getElementById('modal-title').textContent=t; document.getElementById('modal-content').innerHTML=c; document.getElementById('modal-overlay').classList.add('show'); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); }
+
+function confirmRestart(){
+  if(confirm('¿Reiniciar el juego desde el principio?')){ showScreen('screen-intro'); }
+}
+</script>
+</body>
+</html>
